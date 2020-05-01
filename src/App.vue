@@ -1,19 +1,38 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div
+      class="old-browser-message"
+      ref="checkBrowser"
+      v-show="!DropAvailable"
+    >Your browser is too old. Really</div>
+    <drop v-if="DropAvailable&&!listLoaded" />
+    <list v-if="listLoaded" />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Drop from "./components/Drop";
+import List from "./components/List";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
+    Drop, List
+  },
+  computed: {
+    DropAvailable() {
+      let div = document.createElement("div");
+      return (
+        ("draggable" in div || ("ondragstart" in div && "ondrop" in div)) &&
+        "FormData" in window &&
+        "FileReader" in window
+      );
+    },
+    listLoaded() {
+      return this.$store.state.filename && this.$store.state.filename.length>0;
+    }
   }
-}
+};
 </script>
 
 <style>
@@ -21,8 +40,20 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
+  min-width: 200px;
+  height: 100vh;
+  min-height: 200px;
+  justify-content: center;
+  align-items: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+.old-browser-message {
+  background: rgba(255, 100, 100, 0.4);
+  padding: 10px;
+  color: rgba(255, 100, 100, 0.9);
+  margin: 10px;
 }
 </style>
