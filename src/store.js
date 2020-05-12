@@ -5,12 +5,20 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    status: null,
     filename: null,
     list: [],
   },
   mutations: {
+    clearUsers(state) {
+      Vue.set(state, 'list', []); 
+    },
+    addUsersChunk(state, payload) {
+      Vue.set(state, 'list', state.list.concat(payload.list));
+    },
     replaceUsers(state, payload) {
-      Vue.set(state, 'list', payload.list);
+      state.list = payload.list;
+      //Vue.set(state, 'list', payload.list);
     },
     setFilename(state, payload) {
       Vue.set(state, 'filename', payload.filename);
@@ -28,13 +36,26 @@ export default new Vuex.Store({
       }
       context.commit("removeUser", {index: index});
     },
-    updateStore(context, payload) {
-      if (payload.incoming) {
-        context.commit('replaceUsers', {list: payload.incoming});
-      }
+    async updateStore(context, payload) {
       if (payload.filename) {
-        context.commit('setFilename', { filename: payload.filename })
+        context.commit('setFilename', { filename: payload.filename });
+      }
+      if (payload.incoming) {
+        context.commit('clearUsers');
+        /*while(payload.incoming.length > 0) {
+          let chunk = payload.incoming.splice(0,1000);
+          context.commit('addUsersChunk', {list: chunk});
+          await pause();
+        }*/
+        context.commit('replaceUsers', {list: payload.incoming});
       }
     }
   }
 })
+
+/*function pause() {
+  return new Promise(resolve => setTimeout(() => {
+    console.log('paused');
+    resolve();
+  }, 200));
+}*/

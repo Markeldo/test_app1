@@ -2,7 +2,6 @@
   <div class="drop-area">
     <form class="drop-form" ref="form">
       Drop file here
-      <!--input type="file"-->
     </form>
   </div>
 </template>
@@ -11,11 +10,20 @@
 export default {
   data() {
     return {
-      resultArray: []
+      resultArray: [],
+      worker : new Worker('/workers/parseObj.js')
     };
   },
   mounted() {
     var self = this;
+    self.worker.addEventListener('message', function(e) {
+      console.log('asdasdasdasdasd');
+      console.log(new Date());
+      self.$store.dispatch("updateStore", {
+          incoming: e.data,
+        });
+    }, false);
+
     [
       "drag",
       "dragstart",
@@ -40,27 +48,40 @@ export default {
       this.classList.remove("drop-form--hovered");
       let reader = new FileReader();
       reader.readAsText(e.dataTransfer.files[0]);
-      let fileName = e.dataTransfer.files[0].name;
+      self.$store.dispatch("updateStore", {
+          filename: e.dataTransfer.files[0].name
+        });
       reader.onload = function() {
-        let result = JSON.parse(reader.result);
-        self.proceedObj(result);
-        self.resultArray.sort(function(a, b) {
-          if (a.toLowerCase() > b.toLowerCase()) {
-            return 1;
-          }
-          if (a.toLowerCase() < b.toLowerCase()) {
-            return -1;
-          }
-          return 0;
-        });
-        self.$store.dispatch("updateStore", {
-          incoming: self.resultArray,
-          filename: fileName
-        });
+        self.worker.postMessage({ str : reader.result});
       };
     });
   },
   methods: {
+    parseObj(obj) {
+      let queue = [];
+      let resultArray = [];
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          queue.push(obj[i]);
+        }
+      } else {
+        queue.push(obj);
+      }
+
+      while (queue.length > 0) {
+        let tmpNode = queue.shift();
+        if (resultArray.indexOf(tmpNode.user) === -1) {
+          resultArray.push(tmpNode.user);
+        }
+        if (tmpNode.replies) {
+          for (let i = 0; i < tmpNode.replies.length; i++) {
+            queue.push(tmpNode.replies.shift());
+          }
+        }
+      }
+
+      return resultArray;
+    },
     proceedObj(obj) {
       if (Array.isArray(obj)) {
         for (let i = 0; i < obj.length; i++) {
@@ -78,20 +99,6 @@ export default {
           this.proceedObj(obj.replies[i]);
         }
       }
-
-      /*console.log(arr);
-      let incoming = arr;
-      if (incoming.user) {
-        context.commit('addUser', incoming.user);
-      }
-      if (payload.filename) {
-        context.commit('setFilename', { filename: payload.filename })
-      }
-      if (incoming.replies && incoming.replies.length > 0) {
-        incoming.replies.forEach((item) => {
-          context.dispatch('updateStore', { incoming: item });
-        });
-      }*/
     }
   }
 };
@@ -100,13 +107,22 @@ export default {
 <style lang="less" scoped>
 .drop-form {
   background: #ccc;
-  min-height: 150px;
-  min-width: 150px;
+  height: 150px;
+  width: 150px;
   display: flex;
   justify-content: center;
   align-items: center;
+  &:hover {
+    background: #999;
+  }
   &--hovered {
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
   }
+}
+.loader {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>

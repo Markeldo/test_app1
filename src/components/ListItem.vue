@@ -1,13 +1,21 @@
 <template>
   <li class="item">
     <span class="item__name">{{ user }}</span>
-    <span class="item__remove" @click="onRemove"></span>
+    <span class="item__remove" @click="onRemove">❌</span>
   </li>
 </template>
 
 <script>
+
 export default {
   props: ["user"],
+ /* render: function (createElement) {
+    return createElement(
+      'li',   // имя тега
+      {class : "item"},
+      this.user // массив дочерних элементов
+    )
+  },*/
   methods: {
     onRemove() {
       this.$store.dispatch("removeUser", { user: this.user });
@@ -30,23 +38,33 @@ export default {
   &__name {
     text-align: left;
   }
-
   &__remove {
+    cursor: pointer;
+    border-radius: 9px;
+    font-size: 10px;
+    height: 19px;
+    width: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+      font-size: 12px;
+    }
+  }
+
+  /*&__remove {
     cursor: pointer;
     height: 19px;
     position: relative;
-    transition: 0.2s;
     box-shadow: 0 0 0 1px rgba(85, 85, 85, 0.15);
     border-radius: 9px;
 
-    &:after,
+   /* &:after,
     &:before {
       content: "";
       display: block;
       width: 18px;
       height: 0;
-      border-bottom: 2px solid #999;
-      transition: 0.2s;
       transform: translateY(9px) rotate(45deg) scale(0.4, 0.4);
     }
     &:before {
@@ -64,6 +82,6 @@ export default {
         transform: translateY(9px) rotate(-45deg) scale(0.8, 0.8);
       }
     }
-  }
+  }*/
 }
 </style>
